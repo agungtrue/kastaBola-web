@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+
+  /* KastaBola */
+  --color-brand-dark: #0B0E11;   /* Pitch Carbon */
+  --color-brand-card: #161B22;   /* Stadium Steel */
+  --color-brand-volt: #CCFF00;   /* Electric Volt Neon */
+  --color-brand-gold: #FFB800;   /* Trophy Gold */
+  --color-brand-muted: #8B949E;  /* Referee Gray */
+
+  /* fonts Pemetaan Font KastaBola */
+  --font-sans: var(--font-inter), sans-serif;
+  --font-sport: var(--font-oswald), sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
