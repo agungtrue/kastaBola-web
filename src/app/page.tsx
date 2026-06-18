@@ -50,7 +50,7 @@ export default function Home() {
 
             <FadeIn delay={200}>
               <p className="max-w-2xl mx-auto text-lg md:text-xl text-white/80 mb-12 leading-relaxed">
-                Sparing amatir rasa Liga Profesional dengan statistik abadi, peringkat resmi regional, dan dokumentasi media premium berbasis <span className="text-brand-volt font-semibold">FIFA Elo Rating</span>.
+                Sparing amatir rasa Liga Profesional dengan statistik abadi, peringkat resmi regional, dan dokumentasi media premium berbasis <span className="text-brand-volt font-semibold">Koefisien Rating</span>.
               </p>
             </FadeIn>
             {/* Tombol CTA Utama menggunakan Electric Volt Neon */}
