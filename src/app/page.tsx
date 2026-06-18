@@ -1,6 +1,8 @@
 // src/app/page.tsx
 import Link from 'next/link';
 import FadeIn from "@/components/styles/FadeIn";
+import Header from "@/components/Header"
+import Footer from "@/components/Footer"
 
 // Komponen Card Kecil untuk Preview Leaderboard
 const TeamRankCard = ({ rank, name, points }: { rank: number; name: string; points: number }) => (
@@ -29,27 +31,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-brand-dark">
-      {/* 1. Header (Navigation) */}
-      <header className="sticky top-0 z-50 bg-brand-dark/90 backdrop-blur-sm border-b border-brand-card">
-        <nav className="container mx-auto px-6 py-4 flex gap-8 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            {/* MONOGRAM LOGO KASTABOLA */}
-            <div className="w-9 h-9 bg-brand-card rounded-lg flex items-center justify-center border-2 border-brand-volt">
-              <span className="font-sport font-black text-2xl text-brand-volt">K</span>
-            </div>
-            <span className="font-sport font-bold text-xl tracking-wider text-white">KASTA<span className="text-brand-volt">BOLA</span>.ID</span>
-          </Link>
-          <div className="flex justify-between gap-1 md:gap-5">
-            <Link href="#cta" className="text-sm font-semibold text-white/90 hover:text-brand-volt transition-colors">
-              Hubungi Admin
-            </Link>
-            <Link href="#" className="text-sm font-semibold text-white/90 hover:text-brand-volt transition-colors">
-              Login
-            </Link>
-          </div>
-        </nav>
-      </header>
-
+      <Header/>
       <main className="flex-grow">
         {/* 2. Hero Section */}
         <section className="relative bg-brand-dark py-24 md:py-32 overflow-hidden">
@@ -159,23 +141,23 @@ export default function Home() {
             </p>
             
             {/* Teks bergaya Mad Libs Form */}
-            <div className="max-w-xl mx-auto bg-brand-dark p-8 rounded-2xl border border-brand-card mb-12 text-left text-brand-muted leading-relaxed font-sans shadow-inner">
+            {/* <div className="max-w-xl mx-auto bg-brand-dark p-8 rounded-2xl border border-brand-card mb-12 text-left text-brand-muted leading-relaxed font-sans shadow-inner">
               Halo Admin KastaBola, saya Kapten Tim <span className="font-semibold text-white border-b-2 border-brand-volt inline-block w-40 text-center">[ NAMA TIM ]</span> yang berbasis di <span className="font-semibold text-white border-b-2 border-brand-volt inline-block w-48 text-center">[ WILAYAH ]</span>. Kami ingin mengunci slot pendaftaran <span className="font-bold text-brand-gold">FREE TRIAL MEI</span>. Tolong segera verifikasi tim kami.
-            </div>
+            </div> */}
 
             <Link href={`${whatsappBaseUrl}?text=Halo%20KastaBola%2C%20saya%20Kapten%20Tim%20%5B NAMA TIM %5D%20yang%20berbasis%20di%20%5B WILAYAH %5D.%20Kami%20ingin%20mengunci%20slot%20pendaftaran%20FREE%20TRIAL%20MEI.`} target="_blank" className="inline-block bg-brand-volt text-brand-dark font-black text-xl px-12 py-5 rounded-full uppercase tracking-wider hover:bg-white transition-all duration-300">
-              Kunci Slot Tim Kami via WhatsApp
+              Kunci Slot Tim Kamu via WhatsApp
             </Link>
           </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-brand-dark py-8 border-t border-brand-card">
+      <Footer/>
+      {/* <footer className="bg-brand-dark py-8 border-t border-brand-card">
         <div className="container mx-auto px-6 text-center text-brand-muted text-xs tracking-wider">
           © 2026 kastabola.id Part of Julu Coffee & Snacks Ecosystem.
         </div>
-      </footer>
+      </footer> */}
     </div>
   );
 }
