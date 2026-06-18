@@ -1,5 +1,6 @@
 // src/app/page.tsx
 import Link from 'next/link';
+import FadeIn from "@/components/styles/FadeIn";
 
 // Komponen Card Kecil untuk Preview Leaderboard
 const TeamRankCard = ({ rank, name, points }: { rank: number; name: string; points: number }) => (
@@ -59,16 +60,24 @@ export default function Home() {
           }}></div>
           
           <div className="container mx-auto px-6 relative z-10 text-center">
-            <h1 className="font-sport font-black text-6xl md:text-8xl uppercase leading-none tracking-tighter text-white mb-6">
-              TENTUKAN <span className="text-brand-gold">KASTA</span> TIM KAMU!.
-            </h1>
-            <p className="max-w-2xl mx-auto text-lg md:text-xl text-white/80 mb-12 leading-relaxed">
-              Sparing amatir rasa Liga Profesional dengan statistik abadi, peringkat resmi regional, dan dokumentasi media premium berbasis <span className="text-brand-volt font-semibold">FIFA Elo Rating</span>.
-            </p>
+            <FadeIn delay={100}>
+              <h1 className="font-sport font-black text-6xl md:text-8xl uppercase leading-none tracking-tighter text-white mb-6">
+                TENTUKAN <span className="text-brand-gold">KASTA</span> TIM KAMU!.
+              </h1>
+            </FadeIn>
+
+            <FadeIn delay={200}>
+              <p className="max-w-2xl mx-auto text-lg md:text-xl text-white/80 mb-12 leading-relaxed">
+                Sparing amatir rasa Liga Profesional dengan statistik abadi, peringkat resmi regional, dan dokumentasi media premium berbasis <span className="text-brand-volt font-semibold">FIFA Elo Rating</span>.
+              </p>
+            </FadeIn>
             {/* Tombol CTA Utama menggunakan Electric Volt Neon */}
-            <Link href="#cta" className="inline-block bg-brand-volt text-brand-dark font-black text-xl px-12 py-5 rounded-full uppercase tracking-wider hover:scale-105 transition-transform duration-300 shadow-lg shadow-brand-volt/20">
-              Amankan Slot Free Trial Timmu
-            </Link>
+
+            <FadeIn delay={300}>
+              <Link href="#cta" className="inline-block bg-brand-volt text-brand-dark font-black text-xl px-12 py-5 rounded-full uppercase tracking-wider hover:scale-105 transition-transform duration-300 shadow-lg shadow-brand-volt/20">
+                Amankan Slot Free Trial Timmu
+              </Link>
+            </FadeIn>
           </div>
         </section>
 
@@ -79,6 +88,8 @@ export default function Home() {
               Mengapa KastaBola?
             </h2>
             <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+
+            <FadeIn delay={400}>
               {/* Sparing Biasa (Kiri) */}
               <div className="bg-brand-dark p-8 rounded-2xl border border-red-900/30 opacity-60">
                 <div className="text-red-500 text-sm font-bold uppercase tracking-widest mb-6 flex items-center gap-2">
@@ -91,6 +102,9 @@ export default function Home() {
                   <li>• Koefisien Koefisien Koefisien... Apa itu?</li>
                 </ul>
               </div>
+            </FadeIn>
+
+            <FadeIn delay={600}>
               {/* KastaBola Premium (Kanan) */}
               <div className="bg-brand-dark p-8 rounded-2xl border-2 border-brand-volt shadow-xl shadow-brand-volt/5 relative">
                 <div className="absolute -top-3 right-6 bg-brand-gold text-brand-dark text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">PREMIUM</div>
@@ -104,32 +118,35 @@ export default function Home() {
                   <li>• <span className="font-bold text-brand-gold">Peringkat Kasta Resmi berbasis FIFA Elo</span></li>
                 </ul>
               </div>
+            </FadeIn>
             </div>
           </div>
         </section>
 
         {/* 4. Preview: Leaderboard Mockup */}
-        <section className="bg-brand-dark py-20">
-          <div className="container mx-auto px-6 max-w-4xl">
-            <div className="p-6 md:p-8 rounded-3xl border border-brand-card bg-gradient-to-br from-brand-card to-brand-dark">
-              <div className="flex items-center justify-between mb-8 pb-4 border-b border-brand-card">
-                <h3 className="font-sport font-black text-3xl md:text-4xl text-white uppercase tracking-tighter">
-                  KASTA UTAMA REGIONAL
-                </h3>
-                <div className="text-brand-muted text-xs font-medium tracking-wider">JUNI 2026</div>
-              </div>
-              
-              <div className="space-y-4">
-                <TeamRankCard rank={1} name="GARUDA FC" points={1850} />
-                <TeamRankCard rank={2} name="BEKASI JAYA" points={1790} />
-                <TeamRankCard rank={3} name="BINGUNG FC" points={1600} /> 
-                <TeamRankCard rank={4} name="BINTANG MUDA" points={1580} />
-                <TeamRankCard rank={5} name="PUTRA DAERAH" points={1420} />
-                <TeamRankCard rank={6} name="NGGA BINGUNG FC" points={1320} />
+        <FadeIn delay={700}>
+          <section className="bg-brand-dark py-20">
+            <div className="container mx-auto px-6 max-w-4xl">
+              <div className="p-6 md:p-8 rounded-3xl border border-brand-card bg-gradient-to-br from-brand-card to-brand-dark">
+                <div className="flex items-center justify-between mb-8 pb-4 border-b border-brand-card">
+                  <h3 className="font-sport font-black text-3xl md:text-4xl text-white uppercase tracking-tighter">
+                    KASTA UTAMA REGIONAL
+                  </h3>
+                  <div className="text-brand-muted text-xs font-medium tracking-wider">JUNI 2026</div>
+                </div>
+                
+                <div className="space-y-4">
+                  <TeamRankCard rank={1} name="GARUDA FC" points={1850} />
+                  <TeamRankCard rank={2} name="BEKASI JAYA" points={1790} />
+                  <TeamRankCard rank={3} name="BINGUNG FC" points={1600} /> 
+                  <TeamRankCard rank={4} name="BINTANG MUDA" points={1580} />
+                  <TeamRankCard rank={5} name="PUTRA DAERAH" points={1420} />
+                  <TeamRankCard rank={6} name="NGGA BINGUNG FC" points={1320} />
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </FadeIn>
 
         {/* 5. CTA (WA Form) Section */}
         <section id="cta" className="bg-brand-card py-24 border-t border-brand-card">
@@ -156,7 +173,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-brand-dark py-8 border-t border-brand-card">
         <div className="container mx-auto px-6 text-center text-brand-muted text-xs tracking-wider">
-          © 2026 KastaBola.id Part of Julu Coffee & Snacks Ecosystem.
+          © 2026 kastabola.id Part of Julu Coffee & Snacks Ecosystem.
         </div>
       </footer>
     </div>
