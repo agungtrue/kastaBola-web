@@ -14,313 +14,315 @@ interface Player {
 
 interface GoalEvent {
   id: string;
-  playerName: string;
+  scorerName: string;
+  assistantName: string | null;
   minute: number;
   team: 'home' | 'away';
 }
 
-export default function DigitalScoreboard() {
-  // 1. Core State Pertandingan & Tim
-  const [homeTeam, setHomeTeam] = useState({ name: 'BINGUNG FC', score: 0, logoLetter: 'G' });
-  const [awayTeam, setAwayTeam] = useState({ name: 'LUTHFI & FRIEND', score: 0, logoLetter: 'B' });
+interface CardEvent {
+  id: string;
+  playerName: string;
+  minute: number;
+  team: 'home' | 'away';
+  cardType: 'yellow' | 'red';
+}
 
-  // State untuk List Pencetak Gol Kronologis
+export default function IntegratedScoreboard() {
+  const [homeTeam, setHomeTeam] = useState({ name: 'BINGUNG FC', score: 0, logoLetter: 'BFC' });
+  const [awayTeam, setAwayTeam] = useState({ name: 'LUTHFI & FRIENDS JAYA', score: 0, logoLetter: 'LAF' });
+
   const [goalEvents, setGoalEvents] = useState<GoalEvent[]>([]);
+  const [cardEvents, setCardEvents] = useState<CardEvent[]>([]);
 
-  // 2. State Live Match Timer (FE Only Engine)
+  // Live Match Timer (FE Engine)
   const [seconds, setSeconds] = useState(0);
   const [isTimerActive, setIsTimerActive] = useState(false);
+
+  const [selectedPlayer, setSelectedPlayer] = useState<{ player: Player; team: 'home' | 'away' } | null>(null);
+  const [modalStep, setModalStep] = useState<'select_action' | 'select_assist'>('select_action');
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (isTimerActive) {
-      interval = setInterval(() => {
-        setSeconds((prev) => prev + 1);
-      }, 1000);
+      interval = setInterval(() => setSeconds((prev) => prev + 1), 1000);
     } else if (!isTimerActive && interval) {
       clearInterval(interval);
     }
-    return () => {
-      if (interval) clearInterval(interval);
-    //   clearInterval(interval)
-    };
+    return () => { if (interval) clearInterval(interval); };
   }, [isTimerActive]);
 
-  // Format hitungan detik ke format standar MM:SS
   const formatTime = (totalSeconds: number) => {
     const mins = Math.floor(totalSeconds / 60);
     const secs = totalSeconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Ambil menit saat ini untuk penanda waktu gol (misal: detik ke-75 berarti menit ke-2)
-  const getCurrentMatchMinute = () => {
-    return Math.floor(seconds / 60) + 1;
-  };
+  const getCurrentMatchMinute = () => Math.floor(seconds / 60) + 1;
 
-  // 3. Mock Data Line-up
+  // Mock Data Line-up
   const [homeLineup, setHomeLineup] = useState<Player[]>([
-    { id: 1, number: 1, name: 'Budi Utomo (GK)', goals: 0, assists: 0, yellowCard: false, redCard: false },
-    { id: 2, number: 5, name: 'Andi Wijaya', goals: 0, assists: 0, yellowCard: false, redCard: false },
-    { id: 3, number: 10, name: 'Dani Setiawan', goals: 0, assists: 0, yellowCard: false, redCard: false },
-    { id: 4, number: 7, name: 'Eko Prasetyo', goals: 0, assists: 0, yellowCard: false, redCard: false },
-    { id: 5, number: 9, name: 'Feri Fadilah', goals: 0, assists: 0, yellowCard: false, redCard: false },
-    { id: 6, number: 17, name: 'SDA', goals: 0, assists: 0, yellowCard: false, redCard: false },
-    { id: 14, number: 14, name: 'Ulis', goals: 0, assists: 0, yellowCard: false, redCard: false },
-
+    { id: 1, number: 1, name: 'SDA (GK)', goals: 0, assists: 0, yellowCard: false, redCard: false },
+    { id: 2, number: 3, name: 'ULIS', goals: 0, assists: 0, yellowCard: false, redCard: false },
+    { id: 3, number: 101, name: 'DONS', goals: 0, assists: 0, yellowCard: false, redCard: false },
+    { id: 4, number: 8, name: 'ZEKAI', goals: 0, assists: 0, yellowCard: false, redCard: false },
+    { id: 5, number: 84, name: 'SUNNY', goals: 0, assists: 0, yellowCard: false, redCard: false },
+    { id: 6, number: 88, name: 'INS', goals: 0, assists: 0, yellowCard: false, redCard: false },
+    { id: 14, number: 12, name: 'MR', goals: 0, assists: 0, yellowCard: false, redCard: false },
   ]);
 
   const [awayLineup, setAwayLineup] = useState<Player[]>([
-    { id: 6, number: 12, name: 'Rendra (GK)', goals: 0, assists: 0, yellowCard: false, redCard: false },
-    { id: 7, number: 4, name: 'Hendra Saputra', goals: 0, assists: 0, yellowCard: false, redCard: false },
-    { id: 8, number: 8, name: 'Gilang Ramadhan', goals: 0, assists: 0, yellowCard: false, redCard: false },
-    { id: 9, number: 11, name: 'Irfan Bachdim', goals: 0, assists: 0, yellowCard: false, redCard: false },
-    { id: 10, number: 20, name: 'Joko Susilo', goals: 0, assists: 0, yellowCard: false, redCard: false },
-    { id: 11, number: 20, name: 'Arba Eci', goals: 0, assists: 0, yellowCard: false, redCard: false },
-    { id: 12, number: 20, name: 'Luthfi Ibnu', goals: 0, assists: 0, yellowCard: false, redCard: false },
+    { id: 7, number: 12, name: 'Rendra (GK)', goals: 0, assists: 0, yellowCard: false, redCard: false },
+    { id: 8, number: 4, name: 'Hendra Saputra', goals: 0, assists: 0, yellowCard: false, redCard: false },
+    { id: 9, number: 8, name: 'Gilang Ramadhan', goals: 0, assists: 0, yellowCard: false, redCard: false },
+    { id: 10, number: 11, name: 'Irfan Bachdim', goals: 0, assists: 0, yellowCard: false, redCard: false },
+    { id: 11, number: 20, name: 'Joko Susilo', goals: 0, assists: 0, yellowCard: false, redCard: false },
+    { id: 12, number: 21, name: 'Arba', goals: 0, assists: 0, yellowCard: false, redCard: false },
+    { id: 13, number: 22, name: 'LUTHFI IBNU', goals: 0, assists: 0, yellowCard: false, redCard: false },
   ]);
 
-  const [selectedPlayer, setSelectedPlayer] = useState<{ player: Player; team: 'home' | 'away' } | null>(null);
-
-  // 4. Logic Aksi Kejadian Lapangan
-  const handlePlayerAction = (action: 'goal' | 'assist' | 'yellow' | 'red') => {
+  // 1. Trigger Langkah Pertama di Modal (Gol / Kartu)
+  const handleInitialAction = (action: 'trigger_goal' | 'yellow' | 'red') => {
     if (!selectedPlayer) return;
 
     const isHome = selectedPlayer.team === 'home';
     const lineup = isHome ? homeLineup : awayLineup;
     const setLineup = isHome ? setHomeLineup : setAwayLineup;
 
+    if (action === 'trigger_goal') {
+      setModalStep('select_assist');
+      return;
+    }
+
+    // Eksekusi Logika Status Kartu
     const updatedLineup = lineup.map((p) => {
       if (p.id === selectedPlayer.player.id) {
-        switch (action) {
-          case 'goal':
-            if (isHome) setHomeTeam(prev => ({ ...prev, score: prev.score + 1 }));
-            else setAwayTeam(prev => ({ ...prev, score: prev.score + 1 }));
-            
-            // Masukkan data ke list pencetak gol secara real-time
-            setGoalEvents(prev => [
-              ...prev, 
-              { 
-                id: Math.random().toString(), 
-                playerName: p.name, 
-                minute: getCurrentMatchMinute(), 
-                team: selectedPlayer.team 
-              }
-            ]);
-            return { ...p, goals: p.goals + 1 };
-          case 'assist':
-            return { ...p, assists: p.assists + 1 };
-          case 'yellow':
-            return { ...p, yellowCard: !p.yellowCard };
-          case 'red':
-            return { ...p, redCard: !p.redCard };
-          default:
-            return p;
-        }
+        if (action === 'yellow') return { ...p, yellowCard: !p.yellowCard };
+        if (action === 'red') return { ...p, redCard: !p.redCard };
       }
       return p;
     });
 
     setLineup(updatedLineup);
+    setCardEvents(prev => [...prev, {
+      id: Math.random().toString(),
+      playerName: selectedPlayer.player.name,
+      minute: getCurrentMatchMinute(),
+      team: selectedPlayer.team,
+      cardType: action
+    }]);
+    closeModal();
+  };
+
+  // 2. Finalisasi GOL + ASSIST
+  const handleFinalizeGoal = (assistantPlayer: Player | null) => {
+    if (!selectedPlayer) return;
+
+    const isHome = selectedPlayer.team === 'home';
+    const lineup = isHome ? homeLineup : awayLineup;
+    const setLineup = isHome ? setHomeLineup : setAwayLineup;
+
+    if (isHome) setHomeTeam(prev => ({ ...prev, score: prev.score + 1 }));
+    else setAwayTeam(prev => ({ ...prev, score: prev.score + 1 }));
+
+    const updatedLineup = lineup.map((p) => {
+      if (p.id === selectedPlayer.player.id) return { ...p, goals: p.goals + 1 };
+      if (assistantPlayer && p.id === assistantPlayer.id) return { ...p, assists: p.assists + 1 };
+      return p;
+    });
+
+    setLineup(updatedLineup);
+    setGoalEvents(prev => [...prev, {
+      id: Math.random().toString(),
+      scorerName: selectedPlayer.player.name,
+      assistantName: assistantPlayer ? assistantPlayer.name : null,
+      minute: getCurrentMatchMinute(),
+      team: selectedPlayer.team
+    }]);
+
+    closeModal();
+  };
+
+  const closeModal = () => {
     setSelectedPlayer(null);
+    setModalStep('select_action');
   };
 
   const handleAnnulGoal = (eventId: string) => {
-  // 1. Cari tahu detail event gol yang mau dianulir
-  const eventToAnnul = goalEvents.find((e) => e.id === eventId);
-  if (!eventToAnnul) return;
+    const event = goalEvents.find(e => e.id === eventId);
+    if (!event) return;
 
-  const isHome = eventToAnnul.team === 'home';
-  const lineup = isHome ? homeLineup : awayLineup;
-  const setLineup = isHome ? setHomeLineup : setAwayLineup;
+    const isHome = event.team === 'home';
+    const lineup = isHome ? homeLineup : awayLineup;
+    const setLineup = isHome ? setHomeLineup : setAwayLineup;
 
-  // 2. Rollback skor utama tim (-1)
-  if (isHome) {
-    setHomeTeam((prev) => ({ ...prev, score: Math.max(0, prev.score - 1) }));
-  } else {
-    setAwayTeam((prev) => ({ ...prev, score: Math.max(0, prev.score - 1) }));
-  }
+    if (isHome) setHomeTeam(prev => ({ ...prev, score: Math.max(0, prev.score - 1) }));
+    else setAwayTeam(prev => ({ ...prev, score: Math.max(0, prev.score - 1) }));
 
-  // 3. Rollback jumlah gol personal pemain di line-up (-1)
-  const updatedLineup = lineup.map((p) => {
-    if (p.name === eventToAnnul.playerName) {
-      return { ...p, goals: Math.max(0, p.goals - 1) };
-    }
-    return p;
-  });
-  setLineup(updatedLineup);
+    const rolledBackLineup = lineup.map((p) => {
+      if (p.name === event.scorerName) return { ...p, goals: Math.max(0, p.goals - 1) };
+      if (event.assistantName && p.name === event.assistantName) return { ...p, assists: Math.max(0, p.assists - 1) };
+      return p;
+    });
 
-  // 4. Hapus event gol dari list kronologis
-  setGoalEvents((prev) => prev.filter((e) => e.id !== eventId));
-};
+    setLineup(rolledBackLineup);
+    setGoalEvents(prev => prev.filter(e => e.id !== eventId));
+  };
+
+  // Fitur Tambahan: Menggugurkan Hukuman Kartu jika salah input
+  const handleAnnulCard = (eventId: string) => {
+    const event = cardEvents.find(e => e.id === eventId);
+    if (!event) return;
+
+    const isHome = event.team === 'home';
+    const lineup = isHome ? homeLineup : awayLineup;
+    const setLineup = isHome ? setHomeLineup : setAwayLineup;
+
+    const rolledBackLineup = lineup.map((p) => {
+      if (p.name === event.playerName) {
+        if (event.cardType === 'yellow') return { ...p, yellowCard: false };
+        if (event.cardType === 'red') return { ...p, redCard: false };
+      }
+      return p;
+    });
+
+    setLineup(rolledBackLineup);
+    setCardEvents(prev => prev.filter(e => e.id !== eventId));
+  };
 
   return (
     <div className="bg-[#0B0E11] min-h-screen text-white font-sans p-6 select-none">
-      
-      {/* STATUS BAR UTAMA */}
       <div className="text-center mb-8">
         <span className="bg-[#CCFF00] text-[#0B0E11] font-mono font-bold text-xs px-4 py-1.5 rounded-full uppercase tracking-widest">
           MATCH LOG ENGINE: LIVE UPDATING
         </span>
       </div>
-
-      {/* PAPAN SKOR UTAMA UTAMA */}
+      
+      {/* PAPAN SKOR UTAMA */}
       <div className="bg-[#14181F] border border-gray-800 rounded-3xl p-8 max-w-4xl mx-auto shadow-xl">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-0">
-          
-          {/* Tim Rumah (Logo + Nama + Skor) */}
+          {/* Home */}
           <div className="flex flex-col items-center flex-1 text-center">
-            {/* Shield Logo Team Placeholder */}
-            <div className="w-16 h-16 bg-[#1A1F26] border-2 border-[#FFA800] rounded-2xl flex items-center justify-center font-black text-xl text-[#FFA800] mb-3 shadow-md">
-              {homeTeam.logoLetter}
-            </div>
-            <h2 className="font-bold text-lg md:text-xl tracking-wide text-white mb-2">{homeTeam.name}</h2>
+            <div className="w-16 h-16 bg-[#1A1F26] border-2 border-[#FFA800] rounded-2xl flex items-center justify-center font-black text-xl text-[#FFA800] mb-3">{homeTeam.logoLetter}</div>
+            <h2 className="font-bold text-lg md:text-xl text-white mb-2">{homeTeam.name}</h2>
             <div className="text-6xl font-black text-[#FFA800] font-mono">{homeTeam.score}</div>
           </div>
           
-          {/* KONTROL MENIT PERTANDINGAN LIVE (DI TENGAH) */}
+          {/* Timer */}
           <div className="flex flex-col items-center justify-center px-6 border-y md:border-y-0 md:border-x border-gray-800 py-4 md:py-0 min-w-[200px]">
-            <span className="font-mono text-gray-400 font-bold tracking-widest text-xs mb-1">
-              {seconds >= 2700 ? 'BABAK II' : 'BABAK I'}
-            </span>
-            {/* Waktu Digital */}
-            <div className="text-4xl font-black font-mono tracking-wider text-[#CCFF00] bg-[#0B0E11] px-4 py-2 rounded-xl border border-gray-800 min-w-[120px] text-center shadow-inner">
-              {formatTime(seconds)}
-            </div>
-            {/* Tombol Kontrol Timer FE */}
-            <button 
-              onClick={() => setIsTimerActive(!isTimerActive)}
-              className={`mt-3 px-4 py-1.5 rounded-lg text-xs font-mono font-bold uppercase tracking-wider border transition-colors ${
-                isTimerActive 
-                  ? 'bg-red-600/10 border-red-500 text-red-500 hover:bg-red-600/20' 
-                  : 'bg-[#CCFF00]/10 border-[#CCFF00] text-[#CCFF00] hover:bg-[#CCFF00]/20'
-              }`}
-            >
-              {isTimerActive ? '⏸ Pause Clock' : '▶ Start Clock'}
-            </button>
+            <span className="font-mono text-gray-400 font-bold tracking-widest text-xs mb-1">{seconds >= 2700 ? 'BABAK II' : 'BABAK I'}</span>
+            <div className="text-4xl font-black font-mono tracking-wider text-[#CCFF00] bg-[#0B0E11] px-4 py-2 rounded-xl border border-gray-800 min-w-[120px] text-center">{formatTime(seconds)}</div>
+            <button onClick={() => setIsTimerActive(!isTimerActive)} className={`mt-3 px-4 py-1.5 rounded-lg text-xs font-mono font-bold uppercase border transition-colors ${isTimerActive ? 'bg-red-600/10 border-red-500 text-red-500' : 'bg-[#CCFF00]/10 border-[#CCFF00] text-[#CCFF00]'}`}>{isTimerActive ? '⏸ Pause' : '▶ Start'}</button>
           </div>
 
-          {/* Tim Tamu (Skor + Nama + Logo) */}
+          {/* Away */}
           <div className="flex flex-col items-center flex-1 text-center">
-            {/* Shield Logo Team Placeholder */}
-            <div className="w-16 h-16 bg-[#1A1F26] border-2 border-gray-600 rounded-2xl flex items-center justify-center font-black text-xl text-gray-300 mb-3 shadow-md">
-              {awayTeam.logoLetter}
-            </div>
-            <h2 className="font-bold text-lg md:text-xl tracking-wide text-white mb-2">{awayTeam.name}</h2>
+            <div className="w-16 h-16 bg-[#1A1F26] border-2 border-gray-600 rounded-2xl flex items-center justify-center font-black text-xl text-gray-300 mb-3">{awayTeam.logoLetter}</div>
+            <h2 className="font-bold text-lg md:text-xl text-white mb-2">{awayTeam.name}</h2>
             <div className="text-6xl font-black text-white font-mono">{awayTeam.score}</div>
           </div>
-
         </div>
 
-        {/* SECTION NAMA PENCETAK GOAL (DI BAWAH KONTROL SKOR) */}
+        {/* DISPLAY TIMELINE UTAMA (DIPERBARUI: GOL & KARTU KINI MERANDING SEJAJAR) */}
         <div className="border-t border-gray-800/80 mt-8 pt-6 grid grid-cols-2 gap-6 text-xs font-mono text-gray-300">
-        
-        {/* Gol Tim Rumah (Rata Kiri) */}
-        <div className="space-y-2 border-r border-gray-800/50 pr-4">
+          {/* Home Timeline Column */}
+          <div className="space-y-2 border-r border-gray-800/50 pr-4">
+            {/* Gol */}
             {goalEvents.filter(e => e.team === 'home').map(event => (
-            <div key={event.id} className="flex items-center justify-between bg-[#1A1F26]/40 px-3 py-1.5 rounded-lg group border border-transparent hover:border-red-500/30 transition-colors">
-                <div className="flex items-center gap-2">
-                <span className="text-[#FFA800]">⚽</span>
-                <span className="font-medium text-white">{event.playerName}</span>
-                <span className="text-[#CCFF00]">({event.minute}')</span>
+              <div key={event.id} className="flex items-center justify-between bg-[#1A1F26]/40 px-3 py-2 rounded-lg group border border-transparent hover:border-red-500/30">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[#FFA800]">⚽</span>
+                  <span className="font-bold text-white">{event.scorerName}</span>
+                  {event.assistantName && <span className="text-gray-400 text-[11px]">🎯 {event.assistantName}</span>}
+                  <span className="text-[#CCFF00] font-bold">({event.minute})</span>
                 </div>
-                {/* Tombol Anulir Gol */}
-                <button 
-                onClick={() => handleAnnulGoal(event.id)}
-                className="text-gray-500 hover:text-red-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity ml-2 px-1"
-                title="Anulir Gol"
-                >
-                ✕
-                </button>
-            </div>
+                <button onClick={() => handleAnnulGoal(event.id)} className="text-gray-500 hover:text-red-500 font-bold opacity-0 group-hover:opacity-100 px-1">✕</button>
+              </div>
             ))}
-            {goalEvents.filter(e => e.team === 'home').length === 0 && (
-            <p className="text-gray-600 italic text-[11px] pl-3">Belum ada gol terdaftar</p>
-            )}
-        </div>
+            {/* Kartu */}
+            {cardEvents.filter(e => e.team === 'home').map(event => (
+              <div key={event.id} className="flex items-center justify-between bg-[#1A1F26]/20 px-3 py-2 rounded-lg group border border-transparent hover:border-red-500/30">
+                <div className="flex items-center gap-1.5">
+                  <span className={`w-2.5 h-3.5 rounded-sm inline-block ${event.cardType === 'yellow' ? 'bg-yellow-400' : 'bg-red-600'}`}></span>
+                  <span className="text-gray-300">{event.playerName}</span>
+                  <span className="text-gray-500">({event.minute})</span>
+                </div>
+                <button onClick={() => handleAnnulCard(event.id)} className="text-gray-500 hover:text-red-500 font-bold opacity-0 group-hover:opacity-100 px-1">✕</button>
+              </div>
+            ))}
+          </div>
 
-        {/* Gol Tim Tamu (Rata Kanan) */}
-        <div className="space-y-2 pl-4">
+          {/* Away Timeline Column */}
+          <div className="space-y-2 pl-4">
+            {/* Gol */}
             {goalEvents.filter(e => e.team === 'away').map(event => (
-            <div key={event.id} className="flex items-center justify-between bg-[#1A1F26]/40 px-3 py-1.5 rounded-lg group border border-transparent hover:border-red-500/30 transition-colors direction-rtl">
-                {/* Tombol Anulir Gol */}
-                <button 
-                onClick={() => handleAnnulGoal(event.id)}
-                className="text-gray-500 hover:text-red-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity mr-2 px-1"
-                title="Anulir Gol"
-                >
-                ✕
-                </button>
-                <div className="flex items-center gap-2 justify-end w-full">
-                <span className="text-[#CCFF00]">({event.minute}')</span>
-                <span className="font-medium text-white">{event.playerName}</span>
-                <span>⚽</span>
+              <div key={event.id} className="flex items-center justify-between bg-[#1A1F26]/40 px-3 py-2 rounded-lg group border border-transparent hover:border-red-500/30">
+                <button onClick={() => handleAnnulGoal(event.id)} className="text-gray-500 hover:text-red-500 font-bold opacity-0 group-hover:opacity-100 px-1">✕</button>
+                <div className="flex items-center gap-1.5 flex-wrap justify-end w-full text-right">
+                  <span className="text-[#CCFF00] font-bold">({event.minute})</span>
+                  {event.assistantName && <span className="text-gray-400 text-[11px]">🎯 {event.assistantName}</span>}
+                  <span className="font-bold text-white">{event.scorerName}</span>
+                  <span className="text-[#FFA800]">⚽</span>
                 </div>
-            </div>
+              </div>
             ))}
-            {goalEvents.filter(e => e.team === 'away').length === 0 && (
-            <p className="text-gray-600 italic text-[11px] w-full text-right pr-3">Belum ada gol terdaftar</p>
-            )}
+            {/* Kartu */}
+            {cardEvents.filter(e => e.team === 'away').map(event => (
+              <div key={event.id} className="flex items-center justify-between bg-[#1A1F26]/20 px-3 py-2 rounded-lg group border border-transparent hover:border-red-500/30">
+                <button onClick={() => handleAnnulCard(event.id)} className="text-gray-500 hover:text-red-500 font-bold opacity-0 group-hover:opacity-100 px-1">✕</button>
+                <div className="flex items-center gap-1.5 justify-end w-full text-right">
+                  <span className="text-gray-500">({event.minute})</span>
+                  <span className="text-gray-300">{event.playerName}</span>
+                  <span className={`w-2.5 h-3.5 rounded-sm inline-block ${event.cardType === 'yellow' ? 'bg-yellow-400' : 'bg-red-600'}`}></span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-
-        </div>
-
       </div>
 
-      {/* PANEL MANAGEMENT LINE-UP TIM */}
+      {/* RENDER LINE-UP UTAMA (FIXED: KARTU KINI DIRENDER DI SINI) */}
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8 mt-12">
-        {/* LINE-UP HOME */}
+        {/* Home UI */}
         <div className="bg-[#14181F]/50 border border-gray-800 p-6 rounded-2xl">
-          <div className="border-l-4 border-[#FFA800] pl-3 mb-6">
-            <h3 className="font-bold text-lg text-[#FFA800] tracking-wide">LINE-UP {homeTeam.name}</h3>
-          </div>
-          <div className="space-y-3">
-            {homeLineup.map((player) => (
-              <div 
-                key={player.id}
-                onClick={() => setSelectedPlayer({ player, team: 'home' })}
-                className="bg-[#1A1F26] hover:bg-[#232933] border border-gray-800/60 p-4 rounded-xl flex items-center justify-between cursor-pointer transition-all active:scale-[0.99]"
-              >
+          <h3 className="font-bold text-sm text-[#FFA800] tracking-wide mb-4 uppercase">LINE-UP {homeTeam.name}</h3>
+          <div className="space-y-2">
+            {homeLineup.map(p => (
+              <div key={p.id} onClick={() => { setSelectedPlayer({ player: p, team: 'home' }); setModalStep('select_action'); }} className="bg-[#1A1F26] hover:bg-[#232933] border border-gray-800/60 p-4 rounded-xl flex items-center justify-between cursor-pointer transition-all active:scale-[0.99]">
                 <div className="flex items-center gap-4">
                   <span className="w-8 h-8 rounded-lg bg-[#0B0E11] text-gray-300 flex items-center justify-center font-mono font-bold text-sm border border-gray-700">
-                    {player.number}
+                    {p.number}
                   </span>
-                  <span className="font-semibold text-white/90 text-sm">{player.name}</span>
+                  <span className="font-semibold text-white/90 text-sm">{p.name}</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs font-mono">
-                  {player.goals > 0 && <span className="bg-[#FFA800]/10 text-[#FFA800] px-2 py-0.5 rounded">⚽ {player.goals}</span>}
-                  {player.assists > 0 && <span className="bg-[#CCFF00]/10 text-[#CCFF00] px-2 py-0.5 rounded">🎯 {player.assists}</span>}
-                  {player.yellowCard && <span className="w-3 h-4 bg-yellow-400 rounded-sm inline-block"></span>}
-                  {player.redCard && <span className="w-3 h-4 bg-red-600 rounded-sm inline-block"></span>}
+                  {p.goals > 0 && <span className="bg-[#FFA800]/10 text-[#FFA800] px-2 py-0.5 rounded">⚽ {p.goals}</span>}
+                  {p.assists > 0 && <span className="bg-[#CCFF00]/10 text-[#CCFF00] px-2 py-0.5 rounded">🎯 {p.assists}</span>}
+                  {p.yellowCard && <span className="w-3 h-4 bg-yellow-400 rounded-sm inline-block"></span>}
+                  {p.redCard && <span className="w-3 h-4 bg-red-600 rounded-sm inline-block"></span>}
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* LINE-UP AWAY */}
+        {/* Away UI */}
         <div className="bg-[#14181F]/50 border border-gray-800 p-6 rounded-2xl">
-          <div className="border-l-4 border-white pl-3 mb-6">
-            <h3 className="font-bold text-lg text-white tracking-wide">LINE-UP {awayTeam.name}</h3>
-          </div>
-          <div className="space-y-3">
-            {awayLineup.map((player) => (
-              <div 
-                key={player.id}
-                onClick={() => setSelectedPlayer({ player, team: 'away' })}
-                className="bg-[#1A1F26] hover:bg-[#232933] border border-gray-800/60 p-4 rounded-xl flex items-center justify-between cursor-pointer transition-all active:scale-[0.99]"
-              >
+          <h3 className="font-bold text-sm text-white tracking-wide mb-4 uppercase">LINE-UP {awayTeam.name}</h3>
+          <div className="space-y-2">
+            {awayLineup.map(p => (
+              <div key={p.id} onClick={() => { setSelectedPlayer({ player: p, team: 'away' }); setModalStep('select_action'); }} className="bg-[#1A1F26] hover:bg-[#232933] border border-gray-800/60 p-4 rounded-xl flex items-center justify-between cursor-pointer transition-all active:scale-[0.99]">
                 <div className="flex items-center gap-4">
                   <span className="w-8 h-8 rounded-lg bg-[#0B0E11] text-gray-300 flex items-center justify-center font-mono font-bold text-sm border border-gray-700">
-                    {player.number}
+                    {p.number}
                   </span>
-                  <span className="font-semibold text-white/90 text-sm">{player.name}</span>
+                  <span className="font-semibold text-white/90 text-sm">{p.name}</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs font-mono">
-                  {player.goals > 0 && <span className="bg-[#FFA800]/10 text-[#FFA800] px-2 py-0.5 rounded">⚽ {player.goals}</span>}
-                  {player.assists > 0 && <span className="bg-[#CCFF00]/10 text-[#CCFF00] px-2 py-0.5 rounded">🎯 {player.assists}</span>}
-                  {player.yellowCard && <span className="w-3 h-4 bg-yellow-400 rounded-sm inline-block"></span>}
-                  {player.redCard && <span className="w-3 h-4 bg-red-600 rounded-sm inline-block"></span>}
+                  {p.goals > 0 && <span className="bg-[#FFA800]/10 text-[#FFA800] px-2 py-0.5 rounded">⚽ {p.goals}</span>}
+                  {p.assists > 0 && <span className="bg-[#CCFF00]/10 text-[#CCFF00] px-2 py-0.5 rounded">🎯 {p.assists}</span>}
+                  {p.yellowCard && <span className="w-3 h-4 bg-yellow-400 rounded-sm inline-block"></span>}
+                  {p.redCard && <span className="w-3 h-4 bg-red-600 rounded-sm inline-block"></span>}
                 </div>
               </div>
             ))}
@@ -328,47 +330,64 @@ export default function DigitalScoreboard() {
         </div>
       </div>
 
-      {/* CONTEXTUAL MODAL MENU */}
+      {/* MULTI-STEP MODAL ENGINE */}
       {selectedPlayer && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center z-50 p-4">
           <div className="bg-[#14181F] border border-gray-800 w-full max-w-md rounded-t-3xl md:rounded-3xl p-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-gray-800 pb-4 mb-6">
+            
+            {/* LANGKAH 1: PILIH AKSI (FIXED: TOMBOL KARTU MERAH SEKARANG TERSEDIA) */}
+            {modalStep === 'select_action' && (
               <div>
-                <span className="text-xs font-mono text-gray-400 uppercase">Mencatat Menit ke-{getCurrentMatchMinute()}</span>
-                <h4 className="font-bold text-lg text-white mt-1">#{selectedPlayer.player.number} - {selectedPlayer.player.name}</h4>
+                <div className="flex justify-between items-center mb-6">
+                  <h4 className="font-bold text-white">#{selectedPlayer.player.number} - {selectedPlayer.player.name}</h4>
+                  <button onClick={closeModal} className="text-gray-400 font-mono">✕</button>
+                </div>
+                {/* Diubah menjadi grid-cols-3 agar tata letak tombol proporsional */}
+                <div className="grid grid-cols-3 gap-3">
+                  <button onClick={() => handleInitialAction('trigger_goal')} className="flex flex-col items-center justify-center p-4 bg-[#1A1F26] hover:bg-[#FFA800] text-white hover:text-[#0B0E11] border border-gray-800 rounded-xl font-bold gap-2 text-xs uppercase tracking-wider">
+                    <span className="text-xl">⚽</span><span>Goal</span>
+                  </button>
+                  <button onClick={() => handleInitialAction('yellow')} className="flex flex-col items-center justify-center p-4 bg-[#1A1F26] hover:bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 rounded-xl font-bold gap-2 text-xs uppercase tracking-wider">
+                    <span className="w-3.5 h-5 bg-yellow-400 rounded-sm shadow-sm"></span><span>Kuning</span>
+                  </button>
+                  {/* FIX: TOMBOL KARTU MERAH AKTIF */}
+                  <button onClick={() => handleInitialAction('red')} className="flex flex-col items-center justify-center p-4 bg-[#1A1F26] hover:bg-red-600/10 border border-red-600/20 text-red-500 rounded-xl font-bold gap-2 text-xs uppercase tracking-wider">
+                    <span className="w-3.5 h-5 bg-red-600 rounded-sm shadow-sm"></span><span>Merah</span>
+                  </button>
+                </div>
               </div>
-              <button onClick={() => setSelectedPlayer(null)} className="text-gray-400 hover:text-white font-mono">✕</button>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <button onClick={() => handlePlayerAction('goal')} className="flex flex-col items-center justify-center p-5 bg-[#1A1F26] hover:bg-[#FFA800] text-white hover:text-[#0B0E11] border border-gray-800 rounded-2xl transition-all font-bold gap-2">
-                <span className="text-2xl">⚽</span><span className="text-sm">Cetak Gol</span>
-              </button>
-              <button onClick={() => handlePlayerAction('assist')} className="flex flex-col items-center justify-center p-5 bg-[#1A1F26] hover:bg-[#CCFF00] text-white hover:text-[#0B0E11] border border-gray-800 rounded-2xl transition-all font-bold gap-2">
-                <span className="text-2xl">🎯</span><span className="text-sm">Assist</span>
-              </button>
-              <button onClick={() => handlePlayerAction('yellow')} className="flex flex-col items-center justify-center p-5 bg-[#1A1F26] hover:bg-yellow-500/10 border border-yellow-500/30 rounded-2xl transition-all font-bold gap-2">
-                <span className="w-5 h-7 bg-yellow-400 rounded-sm"></span><span className="text-sm text-yellow-400">Kartu Kuning</span>
-              </button>
-              <button onClick={() => handlePlayerAction('red')} className="flex flex-col items-center justify-center p-5 bg-[#1A1F26] hover:bg-red-600/10 border border-red-600/30 rounded-2xl transition-all font-bold gap-2">
-                <span className="w-5 h-7 bg-red-600 rounded-sm"></span><span className="text-sm text-red-500">Kartu Merah</span>
-              </button>
-            </div>
-            <button 
-                onClick={() => setSelectedPlayer(null)}
-                className="w-full text-center mt-6 py-3 border border-gray-800 rounded-xl font-medium text-sm text-gray-400 hover:text-white transition-colors"
-              >
-                Kembali ke Papan Skor
-              </button>
+            )}
+
+            {/* LANGKAH 2: PILIH ASSIST */}
+            {modalStep === 'select_assist' && (
+              <div>
+                <div className="mb-4">
+                  <span className="text-[11px] font-mono text-[#CCFF00] uppercase tracking-widest block mb-1">Langkah 2: Validasi Assist</span>
+                  <h4 className="font-bold text-white">Siapa yang memberi umpan kepada <span className="text-[#FFA800]">{selectedPlayer.player.name}</span>?</h4>
+                </div>
+                <div className="space-y-2 max-h-60 overflow-y-auto pr-1 my-4">
+                  {(selectedPlayer.team === 'home' ? homeLineup : awayLineup)
+                    .filter(p => p.id !== selectedPlayer.player.id)
+                    .map(teammate => (
+                      <button key={teammate.id} onClick={() => handleFinalizeGoal(teammate)} className="w-full text-left bg-[#1A1F26] hover:bg-[#CCFF00] text-white hover:text-[#0B0E11] p-3 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3">
+                        <span className="w-6 h-6 rounded bg-[#0B0E11]/40 text-xs font-mono flex items-center justify-center font-bold">{teammate.number}</span>
+                        {teammate.name}
+                      </button>
+                    ))}
+                </div>
+                <button onClick={() => handleFinalizeGoal(null)} className="w-full bg-white/5 hover:bg-white/10 text-gray-300 font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider border border-gray-800">
+                  🚫 Gol Mandiri / Tanpa Assist
+                </button>
+              </div>
+            )}
+
+            <button onClick={closeModal} className="w-full text-center mt-6 py-2.5 border border-gray-800 rounded-xl font-medium text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider">
+              Kembali ke Papan Skor
+            </button>
+
           </div>
         </div>
       )}
-
-      {/* SUBMIT BUTTON */}
-      <div className="max-w-6xl mx-auto text-right mt-12 border-t border-gray-900 pt-6">
-        <button className="w-full md:w-auto bg-[#CCFF00] text-[#0B0E11] font-black uppercase tracking-wider py-4 px-8 rounded-xl hover:bg-white transition-all text-sm shadow-md">
-          Selesaikan Pertandingan ➔
-        </button>
-      </div>
 
     </div>
   );
